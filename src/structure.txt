@@ -1,0 +1,73 @@
+.
+├── App
+│   └── App.jsx
+├── App.css
+├── Dashboard
+│   ├── Dashboard.jsx
+│   ├── Templates.jsx
+│   ├── components
+│   │   ├── CategoryModal.jsx
+│   │   └── Sidebar.jsx
+│   └── sections
+│       ├── CreateTemplate.jsx
+│       └── CreatedTemplates.jsx
+├── SaaS.jsx
+├── assets
+│   ├── empty-selection.svg
+│   ├── placeholder.svg
+│   ├── profile-picture.jpeg
+│   ├── react.svg
+│   └── vecteezy_selection-tool-illustration-design_49380052.jpg
+├── components
+│   ├── Dropdown.jsx
+│   ├── EditorCanvas.jsx
+│   ├── TemplateGallery.jsx
+│   ├── TopBar.jsx
+│   ├── ZoomComponent.jsx
+│   ├── panels
+│   │   ├── BarcodePropertiesPanel.jsx
+│   │   ├── EmptySelectionPanel.jsx
+│   │   ├── ImagePropertiesPanel.jsx
+│   │   ├── PropertiesPanel.jsx
+│   │   ├── QRCodePropertiesPanel.jsx
+│   │   ├── ShapesPropertiesPanel.jsx
+│   │   ├── StarRatingPropertiesPanel.jsx
+│   │   └── TextPropertiesPanel.jsx
+│   ├── sidebar
+│   │   ├── LeftSidebar.jsx
+│   │   ├── NarrowSidebar.jsx
+│   │   ├── WideSidebar.jsx
+│   │   └── panels
+│   │       ├── BarCodePanel.jsx
+│   │       ├── QrCodePanel.jsx
+│   │       ├── ShapesPanel.jsx
+│   │       ├── StarRatingPanel.jsx
+│   │       └── shapes
+│   │           └── Shapes.jsx
+│   └── ui
+│       ├── button.jsx
+│       ├── card.jsx
+│       ├── dialog.jsx
+│       ├── dropdown-menu.jsx
+│       ├── input.jsx
+│       ├── popover.jsx
+│       ├── scroll-area.jsx
+│       ├── select.jsx
+│       ├── separator.jsx
+│       ├── sheet.jsx
+│       ├── tabs.jsx
+│       └── tooltip.jsx
+├── context
+│   ├── AlertContext.jsx
+│   └── GlobalAlert.jsx
+├── index.css
+├── lib
+│   └── utils.js
+├── main.jsx
+├── structure.txt
+└── utils
+    ├── canvasUtils.js
+    ├── loadGoogleFonts.js
+    └── useClickOutside.js
+
+15 directories, 56 files
