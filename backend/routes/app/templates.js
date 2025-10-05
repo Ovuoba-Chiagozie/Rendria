@@ -5,7 +5,10 @@ import { renderShape } from "../../controllers/renderHelpers/renderShapes.js";
 import { renderQRCode } from "../../controllers/renderHelpers/renderQRCode.js";
 import { renderBarcode } from "../../controllers/renderHelpers/renderBarcode.js";
 import { renderStarRating } from "../../controllers/renderHelpers/renderStarRating.js";
-const placeholder = `http://localhost:5000/assets/placeholder.svg`;
+const placeholder =
+  process.env.NODE_ENV === "production"
+    ? "https://api.rendria.com/assets/placeholder.svg"
+    : "http://localhost:5000/assets/placeholder.svg";
 
 
 import upload from "../../config/multer.js";
