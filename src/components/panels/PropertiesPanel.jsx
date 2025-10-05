@@ -20,6 +20,7 @@ export default function PropertiesPanel({
   updateElements,
   isPropertiesPanelOpen,
   setIsPropertiesPanelOpen,
+  templateId
 }) {
   const selectedElement = elements.find((el) => el.id === selectedId);
 
@@ -56,6 +57,7 @@ export default function PropertiesPanel({
                     selectedId={selectedId}
                     updateSelectedElement={updateSelectedElement}
                     updateElements={updateElements}
+                    templateId={templateId}
                   />
                 )}
 

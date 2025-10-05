@@ -11,8 +11,9 @@ import { renderStarRating } from "./renderHelpers/renderStarRating.js";
 import cloudinary from "../config/cloudinary.js";
 import { customAlphabet } from "nanoid";
 import { deductCredits } from "../utils/credits.js";
+import { invokeLambda } from "../config/lamdaClient.js";
 
-const placeholder = `http://localhost:5000/assets/placeholder.svg`;
+const placeholder = `${import.meta.env.VITE_API_URL}/assets/placeholder.svg`;
 const nanoid = customAlphabet("0123456789ABCDEFGHJKLMNPQRSTUVWXYZ", 20);
 
 const allowedFields = {
@@ -65,8 +66,8 @@ export const renderTemplate = async (req, res) => {
 
     const { templateId, modifications, format, width, height } = value;
 
-     // 🔒 Only fetch templates that belong to the current API key’s user
-     const template = await Template.findOne({
+    // 🔒 Only fetch templates that belong to the current API key’s user
+    const template = await Template.findOne({
       _id: templateId,
       userId: req.userId, // <-- enforce ownership
     });
@@ -76,6 +77,7 @@ export const renderTemplate = async (req, res) => {
     }
 
     const { canvasSize, name: templateName } = template;
+    console.log({ canvasSize });
 
     // Collect all element names in template for quick lookup
     const elementMap = Object.fromEntries(
@@ -248,68 +250,46 @@ export const renderTemplate = async (req, res) => {
       </html>
     `;
 
-    // Puppeteer render
-    const browser = await puppeteer.launch({
-      headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
-    });
-    const page = await browser.newPage();
-
     const outputWidth = width || canvasSize.width;
     const outputHeight = height || canvasSize.height;
-
-    await page.setViewport({
+    // 3. Call Lambda
+    console.log({
       width: outputWidth,
       height: outputHeight,
+      format,
+      templateId,
     });
 
-    await page.setContent(html, { waitUntil: "networkidle0" });
-    await page.evaluateHandle("document.fonts.ready");
-
-    const buffer = await page.screenshot({ type: format });
-    await browser.close();
-
-    // Cloudinary upload
-    const renderId = nanoid();
-    const now = new Date();
-    const year = now.getUTCFullYear();
-    const month = String(now.getUTCMonth() + 1).padStart(2, "0");
-
-    const folder = `${
-      process.env.NODE_ENV || "test"
-    }/renders/${templateId}/${year}/${month}`;
-
-    const cloudResult = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          folder,
-          public_id: renderId,
-          resource_type: "image",
-          format: format,
-          overwrite: false,
-        },
-        (err, result) => {
-          if (err) reject(err);
-          else resolve(result);
-        }
-      );
-      stream.end(buffer);
+    const lambdaResult = await invokeLambda({
+      html,
+      width: outputWidth,
+      height: outputHeight,
+      format,
+      templateId,
     });
 
-     // ✅ deduct credits (e.g. 1 credit per render)
-     await deductCredits(req.userId, 1);
+    console.log({lambdaResult})
 
-     // Save to DB (🔒 attach user + key for auditing)
-     const renderDoc = await Render.create({
+    if (lambdaResult.statusCode !== 200) {
+      throw new Error(lambdaResult.body || "Lambda failed");
+    }
+
+    const { url, renderId } = JSON.parse(lambdaResult.body)
+
+    // ✅ deduct credits (e.g. 1 credit per render)
+    await deductCredits(req.userId, 1);
+
+    // Save to DB (🔒 attach user + key for auditing)
+    const renderDoc = await Render.create({
       render_id: renderId,
       template_id: templateId,
       template_name: templateName,
-      url: cloudResult.secure_url,
+      url,
       format,
       width: outputWidth,
       height: outputHeight,
-      userId: req.userId,       // ✅ from middleware
-      apiKeyId: req.apiKeyId,   // ✅ track which key did the render (optional, good for analytics/rate limiting)
+      userId: req.userId, // ✅ from middleware
+      apiKeyId: req.apiKeyId, // ✅ track which key did the render (optional, good for analytics/rate limiting)
     });
 
     // ✅ log usage
@@ -317,7 +297,13 @@ export const renderTemplate = async (req, res) => {
       user: req.userId,
       action: "render",
       creditsUsed: 1,
-      meta: { renderId, templateId, format, width: outputWidth, height: outputHeight },
+      meta: {
+        renderId,
+        templateId,
+        format,
+        width: outputWidth,
+        height: outputHeight,
+      },
     });
 
     res.json(renderDoc);
@@ -327,7 +313,6 @@ export const renderTemplate = async (req, res) => {
   }
 };
 
-
 // GET /renders → list user renders
 export const getRenders = async (req, res) => {
   try {
@@ -336,7 +321,9 @@ export const getRenders = async (req, res) => {
       .lean();
     res.json(renders);
   } catch (err) {
-    res.status(500).json({ message: "Error fetching renders", error: err.message });
+    res
+      .status(500)
+      .json({ message: "Error fetching renders", error: err.message });
   }
 };
 
@@ -348,14 +335,16 @@ export const deleteRender = async (req, res) => {
     // 1. Find the render (but don't delete yet)
     const render = await Render.findOne({ _id: id, userId: req.userId });
     if (!render) {
-      return res.status(404).json({ message: "Render not found or unauthorized" });
+      return res
+        .status(404)
+        .json({ message: "Render not found or unauthorized" });
     }
 
     // 2. Extract public_id and folder path from render doc
     const publicId = render.render_id; // since you saved it
-    const folder = `${
-      process.env.NODE_ENV || "test"
-    }/renders/${render.template_id}/${render.created_at.getUTCFullYear()}/${String(
+    const folder = `${process.env.NODE_ENV || "test"}/renders/${
+      render.template_id
+    }/${render.created_at.getUTCFullYear()}/${String(
       render.created_at.getUTCMonth() + 1
     ).padStart(2, "0")}`;
 
@@ -381,7 +370,8 @@ export const deleteRender = async (req, res) => {
     await Render.findOneAndDelete({ _id: id, userId: req.userId });
 
     res.json({
-      message: "Render and related Cloudinary assets/folder deleted successfully",
+      message:
+        "Render and related Cloudinary assets/folder deleted successfully",
       render,
     });
   } catch (err) {
@@ -389,4 +379,3 @@ export const deleteRender = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-

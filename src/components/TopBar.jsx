@@ -5,12 +5,7 @@ import axios from "axios";
 import { Canvg } from "canvg";
 import { useClickOutside } from "@/utils/useClickOutside";
 import { useAuth } from "@/context/AuthContext";
-import {
-  FaArrowsAlt,
-  FaDownload,
-  FaSave,
-  FaMagic,
-} from "react-icons/fa";
+import { FaArrowsAlt, FaDownload, FaSave, FaMagic } from "react-icons/fa";
 
 export default function Topbar({
   canvasSize,
@@ -19,7 +14,7 @@ export default function Topbar({
   setTemplateName,
   onSaveTemplate,
   saveStatus,
-  templateId
+  templateId,
 }) {
   const [resizeModalOpen, setResizeModalOpen] = useState(false);
   const modalRef = useRef(null);
@@ -87,11 +82,10 @@ export default function Topbar({
     });
   };
 
-
   async function captureCanvasThumbnail() {
     const canvasEl = document.getElementById("editor-canvas");
     if (!canvasEl) return null;
-  
+
     // Clone for clean export
     const clone = canvasEl.cloneNode(true);
     clone.style.transform = "none";
@@ -99,10 +93,14 @@ export default function Topbar({
     clone.style.left = "-99999px";
     clone.style.top = "0";
     document.body.appendChild(clone);
-  
+
     // Remove unwanted UI
-    clone.querySelectorAll(".moveable, .moveable-control, .moveable-line,.moveable-area, .moveable-origin,  .element-action, [style*='dashed']").forEach((el) => el.remove());
-  
+    clone
+      .querySelectorAll(
+        ".moveable, .moveable-control, .moveable-line,.moveable-area, .moveable-origin,  .element-action, [style*='dashed']"
+      )
+      .forEach((el) => el.remove());
+
     // Convert inline SVGs to canvases
     const svgNodes = clone.querySelectorAll("svg");
     for (const svg of svgNodes) {
@@ -112,45 +110,44 @@ export default function Topbar({
         const canvas = document.createElement("canvas");
         canvas.width = width || 100;
         canvas.height = height || 100;
-  
+
         const ctx = canvas.getContext("2d");
         const v = await Canvg.from(ctx, svgText);
         await v.render();
-  
+
         svg.replaceWith(canvas);
       } catch (err) {
         console.error("SVG → Canvas conversion failed:", err);
       }
     }
-  
+
     await document.fonts.ready;
-  
+
     // Render at natural size (no width override)
     const fullCanvas = await html2canvas(clone, {
       backgroundColor: null,
       scale: 1,
       useCORS: true,
     });
-  
+
     clone.remove();
-  
+
     // Resize manually to 400px wide, preserving aspect ratio
     const targetWidth = 400;
     const aspectRatio = fullCanvas.width / fullCanvas.height;
     const targetHeight = Math.round(targetWidth / aspectRatio);
-  
+
     const resizedCanvas = document.createElement("canvas");
     resizedCanvas.width = targetWidth;
     resizedCanvas.height = targetHeight;
-  
+
     const ctx = resizedCanvas.getContext("2d");
     ctx.drawImage(fullCanvas, 0, 0, targetWidth, targetHeight);
-  
+
     return new Promise((resolve) => {
       resizedCanvas.toBlob((blob) => resolve(blob), "image/png");
     });
   }
-
 
   const exportCanvasAsImage = async () => {
     try {
@@ -161,7 +158,7 @@ export default function Topbar({
       await onSaveTemplate(blob);
 
       const body = { templateId };
-      const res = await axios.post("http://localhost:5000/v1/render", body, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/v1/render`, body, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`,
@@ -182,7 +179,6 @@ export default function Topbar({
       link.click();
       link.remove();
       URL.revokeObjectURL(downloadUrl);
-
     } catch (err) {
       console.error("❌ Export failed:", err);
       alert("Export failed, please try again.");
@@ -191,22 +187,24 @@ export default function Topbar({
     }
   };
 
-  
-
   return (
     <div className="w-full h-[60px] bg-white border-b border-[#EBEBEAFF] flex items-center px-4 justify-between">
       {/* Left */}
       <div className="flex items-center gap-3">
-        {/* Logo placeholder */}
-        <div className="w-10 h-10 bg-white border border-[#EBEBEA] text-[#FF6E61] font-bold rounded flex items-center justify-center text-xs">
-          LOGO
-        </div>
+        {/* Logo */}
+        <a href="/" className="flex items-center">
+          <img
+            src="/logo.svg"
+            alt="Logo"
+            className="w-11 h-11 object-contain"
+          />
+        </a>
 
         {/* Filename input */}
         <input
           type="text"
           placeholder="Untitled File"
-          className="bg-white h-8 text-gray-800 text-center border border-[#EBEBEA] rounded focus:outline focus:outline-blue-400 focus:outline-[0.2px] [&::-webkit-inner-spin-button]:appearance-none"
+          className="bg-white h-8 text-gray-800 ml-5 text-center border border-[#EBEBEA] rounded focus:outline focus:outline-blue-400 focus:outline-[0.2px] [&::-webkit-inner-spin-button]:appearance-none"
           value={templateName}
           onChange={(e) => setTemplateName(e.target.value)}
         />
@@ -299,36 +297,36 @@ export default function Topbar({
       {/* Right */}
       <div className="flex items-center gap-2">
         {/* Primary - Brand Color */}
-        <button className="flex items-center gap-2 bg-[#FF6E61] hover:bg-[#e65f53] text-white px-3 py-2 rounded text-sm">
+        {/* <button className="flex items-center gap-2 bg-[#FF6E61] hover:bg-[#e65f53] text-white px-3 py-2 rounded text-sm">
           <FaMagic /> Automate Template
-        </button>
+        </button> */}
 
         {/* Secondary - White with Brand Border/Text */}
         <button
-        onClick={exportCanvasAsImage}
-        disabled={exporting}
-        className="flex items-center gap-2 bg-white border border-[#FF6E61] text-[#FF6E61] hover:bg-[#fff3f2] px-3 py-2 rounded text-sm disabled:opacity-50"
-      >
-        <FaDownload />
-        {exporting ? "Exporting..." : "Export"}
-      </button>
+          onClick={exportCanvasAsImage}
+          disabled={exporting}
+          className="flex items-center gap-2 bg-white border border-[#FF6E61] text-[#FF6E61] hover:bg-[#fff3f2] px-3 py-2 rounded text-sm disabled:opacity-50"
+        >
+          <FaDownload />
+          {exporting ? "Exporting..." : "Export"}
+        </button>
 
         {/* Save Button */}
-      <button
-       onClick={async () => {
-        const blob = await captureCanvasThumbnail();
-        onSaveTemplate(blob); // pass Blob to parent
-      }}
-        disabled={saveStatus === "saving"}
-        className="flex items-center gap-2 bg-[#EBEBEA] text-gray-800 hover:bg-[#d9d9d8] px-3 py-2 rounded text-sm disabled:opacity-50"
-      >
-        <FaSave />
-        {saveStatus === "saving"
-          ? "Saving..."
-          : saveStatus === "saved"
-          ? "Saved"
-          : "Save"}
-      </button>
+        <button
+          onClick={async () => {
+            const blob = await captureCanvasThumbnail();
+            onSaveTemplate(blob); // pass Blob to parent
+          }}
+          disabled={saveStatus === "saving"}
+          className="flex items-center gap-2 bg-[#EBEBEA] text-gray-800 hover:bg-[#d9d9d8] px-3 py-2 rounded text-sm disabled:opacity-50"
+        >
+          <FaSave />
+          {saveStatus === "saving"
+            ? "Saving..."
+            : saveStatus === "saved"
+            ? "Saved"
+            : "Save"}
+        </button>
       </div>
     </div>
   );

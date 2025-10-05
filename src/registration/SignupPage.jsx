@@ -46,7 +46,7 @@ export default function SignupPage() {
 
       // handle post-signup redirect
       const params = new URLSearchParams(location.search);
-      const next = params.get("next") || "/dashboard/templates";
+      const next = params.get("next") || "/templates";
       navigate(next, { replace: true });
     } catch (err) {
       console.error(err);
@@ -65,8 +65,8 @@ export default function SignupPage() {
       <div className="sm:mx-auto sm:w-full sm:max-w-sm">
         <img
           alt="Your Company"
-          src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
-          className="mx-auto h-10 w-auto"
+          src="/logo.svg"
+          className="mx-auto h-16 w-auto"
         />
         <h2 className="mt-10 text-center text-2xl font-bold tracking-tight text-gray-900">
           Create your account

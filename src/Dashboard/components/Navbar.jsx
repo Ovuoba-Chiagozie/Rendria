@@ -61,7 +61,7 @@ export default function Navbar() {
 
         {/* Upgrade button */}
         <button
-          onClick={() => navigate("/dashboard/pricing")}
+          onClick={() => navigate("/pricing")}
           className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-yellow-900 bg-yellow-200 hover:bg-yellow-300 transition-colors"
         >
           <FaCrown className="text-yellow-700" />

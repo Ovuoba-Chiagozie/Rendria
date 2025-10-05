@@ -3,6 +3,8 @@ import { Slider } from "@mui/material";
 import { SketchPicker } from "react-color";
 import { motion, AnimatePresence } from "motion/react";
 import { LuFlipVertical, LuFlipHorizontal } from "react-icons/lu";
+import { useAlert } from "@/context/AlertContext";
+import axios from "axios"; // 👈 Add this import at the top
 
 import { useClickOutside } from "@/utils/useClickOutside";
 import Dropdown from "@/components/Dropdown";
@@ -12,9 +14,12 @@ const ImagePropertiesPanel = ({
   selectedId,
   updateSelectedElement,
   updateElements,
+  templateId,
 }) => {
   const [colorPickerShow, setColorPickerShow] = useState(false);
   const [isObjectFitDropdownOpen, setIsObjectFitDropdownOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const { showAlert } = useAlert();
 
   const sketchPickerRef = useRef(null);
   const objectFitRef = useRef(null);
@@ -29,8 +34,8 @@ const ImagePropertiesPanel = ({
 
   return (
     <div className="w-full px-4">
-       {/* Layer Name */}
-       <div className="mt-2">
+      {/* Layer Name */}
+      <div className="mt-2">
         <div className="text-sm font-semibold mb-2">Layer Name</div>
         <input
           type="text"
@@ -234,26 +239,59 @@ const ImagePropertiesPanel = ({
           )}
         </div>
         <button
-          className="mt-2 px-3 py-1.5 text-sm bg-[#FF6E61FF] text-white rounded hover:bg-[#e75b50] transition-colors"
-          onClick={() => {
+          className="mt-2 px-3 py-1.5 text-sm bg-[#FF6E61FF] text-white rounded hover:bg-[#e75b50] transition-colors disabled:opacity-50"
+          onClick={async () => {
+            // Check if template is saved first
+            if (!templateId) {
+              showAlert("Please save the template first before adding images");
+              return;
+            }
+
             const input = document.createElement("input");
             input.type = "file";
             input.accept = "image/*";
-            input.onchange = (e) => {
+            input.onchange = async (e) => {
               const file = e.target.files?.[0];
               if (!file) return;
 
-              const reader = new FileReader();
-              reader.onload = () => {
-                const newSrc = reader.result;
-                updateSelectedElement({ src: newSrc });
-              };
-              reader.readAsDataURL(file);
+              try {
+                // Show loading state
+                setUploading(true);
+
+                const formData = new FormData();
+                formData.append("image", file);
+                formData.append("templateId", templateId);
+                formData.append("elementId", selectedElement.id);
+
+                // Upload to Cloudinary immediately
+                const uploadRes = await axios.post(
+                  `${import.meta.env.VITE_API_URL}/app/templates/upload-image`,
+                  formData,
+                  {
+                    headers: { "Content-Type": "multipart/form-data" },
+                    withCredentials: true,
+                  }
+                );
+
+                // Update element with Cloudinary URL
+                updateSelectedElement({
+                  src: uploadRes.data.url,
+                  publicId: uploadRes.data.public_id || uploadRes.data.publicId,
+                });
+
+                showAlert("Image uploaded successfully!", "success");
+              } catch (error) {
+                console.error("Upload failed:", error);
+                showAlert("Failed to upload image. Please try again.", "error");
+              } finally {
+                setUploading(false);
+              }
             };
             input.click();
           }}
+          disabled={uploading}
         >
-          Replace Image
+          {uploading ? "Uploading..." : "Replace Image"}
         </button>
       </div>
 

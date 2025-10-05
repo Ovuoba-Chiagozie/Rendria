@@ -34,7 +34,7 @@ function SaaS() {
 
             {/* Dashboard layout with nested routes */}
             <Route
-              path="/dashboard"
+              path="/"
               element={
                 <ProtectedRoute>
                   <DashboardLayout />

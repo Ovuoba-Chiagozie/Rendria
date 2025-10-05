@@ -62,7 +62,7 @@ const App = () => {
 
       try {
         const res = await axios.get(
-          `http://localhost:5000/app/templates/${id}`,
+          `${import.meta.env.VITE_API_URL}/app/templates/${id}`,
           { withCredentials: true }
         );
         const template = res.data;
@@ -120,120 +120,50 @@ const App = () => {
     });
   };
 
-  // Combined create/update function (single save)
   const handleSaveTemplate = async (thumbnailBlob) => {
     setSaveStatus("saving");
     try {
       let id = templateId;
-
-      // --- Helpers ---
-      const isDataUrl = (s) => typeof s === "string" && s.startsWith("data:");
-      const isPlaceholder = (s) =>
-        typeof s === "string" &&
-        !s.startsWith("http") &&
-        !s.startsWith("data:") &&
-        !s.startsWith("blob:");
-
-      const dataURLToBlob = (dataurl) => {
-        const arr = dataurl.split(",");
-        const mimeMatch = arr[0].match(/:(.*?);/);
-        const mime = mimeMatch ? mimeMatch[1] : "image/png";
-        const bstr = atob(arr[1]);
-        let n = bstr.length;
-        const u8arr = new Uint8Array(n);
-        while (n--) u8arr[n] = bstr.charCodeAt(n);
-        return new Blob([u8arr], { type: mime });
-      };
-
+  
       // 1. If no templateId yet → create a template shell first
       if (!id) {
         const initPayload = {
           name: templateName || "Untitled Template",
-          elements: [], // no images yet
+          elements: [], // empty at first
           canvasSize,
-          counters, // <-- add this
+          counters,
         };
         const res = await axios.post(
-          "http://localhost:5000/app/templates",
+          `${import.meta.env.VITE_API_URL}/app/templates`,
           initPayload,
           {
             headers: { "Content-Type": "application/json" },
-            withCredentials: true, // 👈 ensures JWT cookie goes along
+            withCredentials: true,
           }
         );
         id = res.data._id;
         setTemplateId(id);
         setTemplateName(res.data.name);
       }
-
-      // 2. Upload image elements
-      const uploadedElements = await Promise.all(
-        elements.map(async (el) => {
-          if (el.type !== "image") return el;
-
-          if (typeof el.src === "string" && /^https?:\/\//i.test(el.src)) {
-            return el; // already remote
-          }
-
-          if (!el.src || isPlaceholder(el.src)) {
-            return { ...el, src: "" };
-          }
-
-          let fileBlob = null;
-          if (el.src instanceof Blob || el.src instanceof File) {
-            fileBlob = el.src;
-          } else if (isDataUrl(el.src)) {
-            fileBlob = dataURLToBlob(el.src);
-          } else {
-            return el;
-          }
-
-          const formData = new FormData();
-          const filename = `${el.id || uuid()}.png`;
-          formData.append("image", fileBlob, filename);
-          formData.append("templateId", id);
-          formData.append("elementId", el.id);
-
-          try {
-            const uploadRes = await axios.post(
-              "http://localhost:5000/app/templates/upload-image",
-              formData,
-              {
-                headers: { "Content-Type": "multipart/form-data" },
-                withCredentials: true, // 👈 send JWT cookie
-              }
-            );
-
-            return {
-              ...el,
-              src: uploadRes.data.url || el.src,
-              publicId: uploadRes.data.public_id || uploadRes.data.publicId,
-            };
-          } catch (uploadErr) {
-            console.error("Image upload failed for element", el.id, uploadErr);
-            return el;
-          }
-        })
-      );
-
-      // 3. Upload thumbnail (if provided)
+  
+      // 2. Upload thumbnail (if provided)
       let thumbnailUrl = null;
       let thumbnailPublicId = null;
       if (thumbnailBlob) {
         const thumbForm = new FormData();
         thumbForm.append("thumbnail", thumbnailBlob, "thumbnail.png");
         thumbForm.append("templateId", id);
-
+  
         try {
           const uploadRes = await axios.post(
-            "http://localhost:5000/app/templates/upload-thumbnail",
+            `${import.meta.env.VITE_API_URL}/app/templates/upload-thumbnail`,
             thumbForm,
             {
               headers: { "Content-Type": "multipart/form-data" },
-              withCredentials: true, // 👈 ensures JWT cookie is sent
+              withCredentials: true,
             }
           );
-
+  
           if (uploadRes.data.url) {
             thumbnailUrl = uploadRes.data.url;
             thumbnailPublicId =
@@ -243,22 +173,21 @@ const App = () => {
           console.error("Thumbnail upload failed", thumbErr);
         }
       }
-
-      // 4. Update template with uploaded elements + thumbnail
+  
+      // 3. Update template with current elements + thumbnail
       const payload = {
         name: templateName || "Untitled Template",
-        elements: uploadedElements,
+        elements: elements, // 👈 No upload needed, already have Cloudinary URLs
         canvasSize,
         counters,
         ...(thumbnailUrl && { thumbnailUrl, publicId: thumbnailPublicId }),
       };
-
-      await axios.put(`http://localhost:5000/app/templates/${id}`, payload, {
+  
+      await axios.put(`${import.meta.env.VITE_API_URL}/app/templates/${id}`, payload, {
         withCredentials: true,
       });
-
-      // 5. Update UI state
-      setElements(uploadedElements);
+  
+      // 4. Update UI state
       setSaveStatus("saved");
       setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (err) {
@@ -282,7 +211,7 @@ const App = () => {
   // Fetch templates from backend
   const fetchTemplates = useCallback(async () => {
     try {
-      const res = await axios.get("http://localhost:5000/app/templates", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/app/templates`, {
         withCredentials: true, // 👈 ensures token cookie is sent
       });
       setTemplates(res.data);
@@ -362,6 +291,7 @@ const App = () => {
           updateElements={updateElements}
           isPropertiesPanelOpen={isPropertiesPanelOpen}
           setIsPropertiesPanelOpen={setIsPropertiesPanelOpen}
+          templateId={templateId}
         />
       </div>
 
