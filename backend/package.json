@@ -1,16 +1,16 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "app.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app.js",
     "dev": "nodemon app.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Rendria API Backend",
   "dependencies": {
     "@aws-sdk/client-lambda": "^3.899.0",
     "@lemonsqueezy/lemonsqueezy.js": "^4.0.0",
@@ -34,11 +34,13 @@
     "mongoose": "^8.17.1",
     "multer": "^2.0.2",
     "nanoid": "^5.1.5",
-    "nodemon": "^3.1.10",
     "puppeteer": "^24.18.0",
     "qrcode-generator": "^2.0.4",
     "sharp": "^0.34.3",
     "snakecase-keys": "^9.0.2",
     "uuid": "^11.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
   }
 }
