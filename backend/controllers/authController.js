@@ -124,8 +124,9 @@ export const getMe = async (req, res) => {
 export const logout = async (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+    domain: process.env.NODE_ENV === "production" ? ".rendria.com" : undefined,
   });
   res.json({ message: "Logged out successfully" });
 };
