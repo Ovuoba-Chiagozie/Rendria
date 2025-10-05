@@ -1,29 +1,34 @@
 // src/utils/loadGoogleFonts.js
 
 export const loadGoogleFonts = (fonts) => {
-  const weights = ["100", "400", "700"];
-  const styles = ["", "italic"];
+  if (!Array.isArray(fonts) || fonts.length === 0) return;
 
-  const families = fonts
-    .map((f) => {
-      const variants = weights
-        .map((w) =>
-          styles
-            .map((s) => `${w}${s}`)
-            .join(",")
-        )
-        .join(",");
-      return `${f.family.replace(/\s+/g, "+")}:ital,wght@0,100;0,400;0,700;1,100;1,400;1,700`;
-    })
-    .join("&family=");
+  // ✅ Remove any non-Google fonts (e.g., "Georgia")
+  const googleSafeFonts = fonts.filter(
+    (f) => f.family.toLowerCase() !== "georgia"
+  );
 
-  const href = `https://fonts.googleapis.com/css2?family=${families}&display=swap`;
+  const chunkSize = 8; // keep URL length safe (Google recommends ≤10)
+  for (let i = 0; i < googleSafeFonts.length; i += chunkSize) {
+    const families = googleSafeFonts
+      .slice(i, i + chunkSize)
+      .map(
+        (f) =>
+          `${f.family.replace(
+            /\s+/g,
+            "+"
+          )}:ital,wght@0,100;0,400;0,700;1,100;1,400;1,700`
+      )
+      .join("&family=");
 
-  if (!document.getElementById("google-font-loader")) {
-    const link = document.createElement("link");
-    link.id = "google-font-loader";
-    link.rel = "stylesheet";
-    link.href = href;
-    document.head.appendChild(link);
+    const href = `https://fonts.googleapis.com/css2?family=${families}&display=swap`;
+
+    // Prevent duplicates if called multiple times
+    if (!document.querySelector(`link[href="${href}"]`)) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = href;
+      document.head.appendChild(link);
+    }
   }
 };
