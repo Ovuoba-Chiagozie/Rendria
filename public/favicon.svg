@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <circle cx="50" cy="50" r="48" fill="#FF6E61" />
+  <text
+    x="50"
+    y="52"
+    font-family="Sora, Poppins, Inter, sans-serif"
+    font-weight="600"
+    font-size="48"
+    fill="#fff"
+    text-anchor="middle"
+    dominant-baseline="middle"
+  >
+    R
+  </text>
+</svg>

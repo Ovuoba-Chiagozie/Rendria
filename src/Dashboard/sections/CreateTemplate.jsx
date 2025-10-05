@@ -94,7 +94,7 @@ export default function CreateTemplate() {
    const createTemplate = async (data) => {
     try {
       const res = await axios.post(
-        "http://localhost:5000/app/templates",
+        `${import.meta.env.VITE_API_URL}/app/templates`,
         data,
         {
           headers: { "Content-Type": "application/json" },

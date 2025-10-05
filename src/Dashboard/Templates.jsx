@@ -13,7 +13,7 @@ export default function Templates() {
   // fetch templates from API
   const fetchTemplates = useCallback(async () => {
     try {
-      const res = await axios.get("http://localhost:5000/app/templates", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/app/templates`, {
         withCredentials: true,
       });
       setTemplates(res.data);

@@ -25,7 +25,7 @@ export default function Renders() {
 
   const fetchRenders = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/app/renders", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/app/renders`, {
         withCredentials: true,
       });
       setRenders(res.data);
@@ -82,7 +82,7 @@ function RenderCard({ render, fetchRenders }) {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`http://localhost:5000/app/renders/${render._id}`, {
+      await axios.delete(`${import.meta.env.VITE_API_URL}/app/renders/${render._id}`, {
         withCredentials: true,
       });
       showAlert("Render deleted", { type: "success" });

@@ -56,7 +56,7 @@ export default function Playground() {
       setTemplatesLoading(true);
       setTemplatesError("");
       try {
-        const res = await axios.get("http://localhost:5000/app/templates", {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/app/templates`, {
           withCredentials: true, // send cookie token
         });
 
@@ -128,7 +128,7 @@ export default function Playground() {
     setLoading(true);
     setResponse(null);
     try {
-      const res = await axios.post("http://localhost:5000/v1/render", body, {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/v1/render`, body, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`, // 👈 auto-attach API key
@@ -152,7 +152,7 @@ export default function Playground() {
   const selectedLabel = selectedTemplate
     ? selectedTemplate.name
     : "Select Template";
-  const placeholderThumb = "http://localhost:5000/assets/placeholder.svg";
+  const placeholderThumb = `${import.meta.env.VITE_API_URL}/assets/placeholder.svg`;
 
   // Helpers
   const getElementKey = (el, index) =>

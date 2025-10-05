@@ -68,7 +68,7 @@ function TemplateCard({ template, fetchTemplates }) {
       });
 
       await axios.post(
-        "http://localhost:5000/app/templates",
+        `${import.meta.env.VITE_API_URL}/app/templates`,
         {
           name: `Copy of ${template.name}`,
           isPremade: template.isPremade,
@@ -95,7 +95,7 @@ function TemplateCard({ template, fetchTemplates }) {
       });
 
       await axios.delete(
-        `http://localhost:5000/app/templates/${template._id}`,
+        `${import.meta.env.VITE_API_URL}/app/templates/${template._id}`,
         { withCredentials: true }
       );
 

@@ -15,12 +15,12 @@ export const AuthProvider = ({ children }) => {
   // ---- Helpers ----
   const getRedirectTarget = () => {
     const params = new URLSearchParams(location.search);
-    return params.get("next") || "/dashboard/templates";
+    return params.get("next") || "/templates";
   };
 
   const fetchApiKey = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/app/api-keys", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/app/api-keys`, {
         withCredentials: true,
       });
       // Assuming backend returns latest active key { apiKey, keyId, createdAt }
@@ -33,7 +33,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/app/auth/me", {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/app/auth/me`, {
         withCredentials: true,
       });
       setUser(res.data.user);
@@ -55,7 +55,7 @@ export const AuthProvider = ({ children }) => {
   // ---- Auth Functions ----
   const signup = async (data) => {
     const res = await axios.post(
-      "http://localhost:5000/app/auth/signup",
+      `${import.meta.env.VITE_API_URL}/app/auth/signup`,
       data,
       { withCredentials: true }
     );
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (data) => {
-    const res = await axios.post("http://localhost:5000/app/auth/login", data, {
+    const res = await axios.post(`${import.meta.env.VITE_API_URL}/app/auth/login`, data, {
       withCredentials: true,
     });
     setUser(res.data.user);
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     await axios.post(
-      "http://localhost:5000/app/auth/logout",
+      `${import.meta.env.VITE_API_URL}/app/auth/logout`,
       {},
       { withCredentials: true }
     );
