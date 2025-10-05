@@ -8,7 +8,7 @@ import { authMiddleware } from "./middlewares/authMiddleware.js";
 import { apiKeyAuth } from "./middlewares/apiKeyAuth.js";
 import { checkCredits } from "./middlewares/checkCredits.js";
 import templatesRouter from "./routes/app/templates.js";
-import renderRoutes from "./routes/v1/render.js"; // public API routes
+import renderRoutes from "./routes/v1/render.js";
 import authRoutes from "./routes/app/authRoutes.js";
 import apiKeysRouter from "./routes/app/apiKeys.js";
 import appRenders from "./routes/app/appRenders.js";
@@ -18,15 +18,14 @@ import webhooksRouter from "./routes/app/webhook.js";
 dotenv.config();
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+const isProduction = process.env.NODE_ENV === "production";
 
 // Middlewares
-// Conditionally apply JSON middleware
 app.use((req, res, next) => {
   if (req.originalUrl.startsWith("/app/webhooks/lemon")) {
-    // Skip JSON parsing for Lemon webhooks
     next();
   } else {
-    // Apply normal JSON everywhere else
     express.json()(req, res, next);
   }
 });
@@ -35,93 +34,89 @@ app.use(cookieParser());
 // Serve assets
 app.use("/assets", express.static("assets"));
 
-// Decide allowed origins
-const allowedOrigins =
-  process.env.NODE_ENV === "production"
-    ? [process.env.APP_BASE_URL] // e.g. https://your-saas.com
-    : ["http://localhost:5173"];
+// CORS configuration
+const allowedOrigins = isProduction
+  ? [process.env.CORS_ORIGIN] // https://app.rendria.com
+  : ["http://localhost:5173"];
 
-// Auth routes — restricted CORS (needed for cookies/sessions)
-app.use(
-  "/app/auth",
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }),
-  authRoutes
-);
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+};
+
+// Auth routes
+app.use("/app/auth", cors(corsOptions), authRoutes);
 
 // Protected API key routes
-app.use(
-  "/app/api-keys",
-  cors({ origin: allowedOrigins, credentials: true }),
-  authMiddleware,
-  apiKeysRouter
-);
+app.use("/app/api-keys", cors(corsOptions), authMiddleware, apiKeysRouter);
 
-// Templates routes (protected, internal app use) — same restriction
-app.use(
-  "/app/templates",
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }),
-  authMiddleware, // 👈 protect all template routes
-  templatesRouter
-);
+// Templates routes
+app.use("/app/templates", cors(corsOptions), authMiddleware, templatesRouter);
 
-app.use(
-  "/app/renders",
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }),
-  authMiddleware, // 👈 protect all app render routes
-  appRenders
-);
+// App renders
+app.use("/app/renders", cors(corsOptions), authMiddleware, appRenders);
 
-app.use(
-  "/app/checkout",
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }),
-  authMiddleware, // 👈 protect all app render routes
-  checkoutRouter
-);
+// Checkout
+app.use("/app/checkout", cors(corsOptions), authMiddleware, checkoutRouter);
 
-app.use(
-  "/app/webhooks",
-  cors({
-    origin: allowedOrigins,
-    credentials: true,
-  }),
-  webhooksRouter
-);
+// Webhooks
+app.use("/app/webhooks", cors(corsOptions), webhooksRouter);
 
-// Public Render API — open CORS (no credentials needed)
+// Public Render API - open CORS
 app.use(
   "/v1/render",
   cors({ origin: "*" }),
   normalizeRequest,
-  apiKeyAuth, // 🔒 protect all render routes
+  apiKeyAuth,
   checkCredits,
   renderRoutes
 );
 
-// Example test route
+// Health check
+app.get("/health", (req, res) => {
+  res.json({ 
+    status: "ok", 
+    environment: process.env.NODE_ENV || "development",
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.get("/", (req, res) => {
-  res.send({ message: "Backend is running and DB connected!" });
+  res.json({ 
+    message: "Rendria API is running",
+    version: "1.0.0",
+    environment: process.env.NODE_ENV || "development"
+  });
+});
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Error:", err.message);
+  res.status(err.status || 500).json({
+    error: isProduction ? "Internal server error" : err.message,
+    ...(isProduction ? {} : { stack: err.stack })
+  });
 });
 
 // Connect to MongoDB and start server
 const startServer = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
-    console.log("✅ MongoDB connected");
+    console.log(`✅ MongoDB connected (${isProduction ? 'Production' : 'Development'})`);
 
-    app.listen(5000, () => {
-      console.log(`🚀 Backend running on port 5000`);
+    app.listen(PORT, () => {
+      console.log(`🚀 Backend running on port ${PORT}`);
+      console.log(`📍 Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(`🌐 CORS allowed origins: ${allowedOrigins.join(", ")}`);
     });
   } catch (error) {
     console.error("❌ MongoDB connection failed:", error);
