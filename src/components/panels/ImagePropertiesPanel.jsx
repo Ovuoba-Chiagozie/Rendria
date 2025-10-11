@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { LuFlipVertical, LuFlipHorizontal } from "react-icons/lu";
 import { useAlert } from "@/context/AlertContext";
 import axios from "axios"; // 👈 Add this import at the top
+import { APP_BASE_URL } from "@/utils/env";
 
 import { useClickOutside } from "@/utils/useClickOutside";
 import Dropdown from "@/components/Dropdown";
@@ -265,7 +266,7 @@ const ImagePropertiesPanel = ({
 
                 // Upload to Cloudinary immediately
                 const uploadRes = await axios.post(
-                  `${import.meta.env.VITE_API_URL}/app/templates/upload-image`,
+                  `${APP_BASE_URL}/app/templates/upload-image`,
                   formData,
                   {
                     headers: { "Content-Type": "multipart/form-data" },

@@ -5,7 +5,10 @@ import axios from "axios";
 import { Canvg } from "canvg";
 import { useClickOutside } from "@/utils/useClickOutside";
 import { useAuth } from "@/context/AuthContext";
+import { useAutomationModal } from "@/context/AutomationModalContext";
 import { FaArrowsAlt, FaDownload, FaSave, FaMagic } from "react-icons/fa";
+import { APP_BASE_URL } from "@/utils/env";
+
 
 export default function Topbar({
   canvasSize,
@@ -20,6 +23,7 @@ export default function Topbar({
   const modalRef = useRef(null);
   const { apiKey } = useAuth();
   const [exporting, setExporting] = useState(false);
+  const { openModal } = useAutomationModal();
 
   useClickOutside(modalRef, () => setResizeModalOpen(false));
 
@@ -158,7 +162,7 @@ export default function Topbar({
       await onSaveTemplate(blob);
 
       const body = { templateId };
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/v1/render`, body, {
+      const res = await axios.post(`${APP_BASE_URL }/v1/render`, body, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`,
@@ -297,9 +301,11 @@ export default function Topbar({
       {/* Right */}
       <div className="flex items-center gap-2">
         {/* Primary - Brand Color */}
-        {/* <button className="flex items-center gap-2 bg-[#FF6E61] hover:bg-[#e65f53] text-white px-3 py-2 rounded text-sm">
+        <button 
+         onClick={() => openModal(templateId)}
+        className="flex items-center gap-2 bg-[#FF6E61] hover:bg-[#e65f53] text-white px-3 py-2 rounded text-sm">
           <FaMagic /> Automate Template
-        </button> */}
+        </button>
 
         {/* Secondary - White with Brand Border/Text */}
         <button

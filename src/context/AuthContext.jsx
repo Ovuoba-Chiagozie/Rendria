@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import { APP_BASE_URL } from "@/utils/env";
 
 const AuthContext = createContext();
 
@@ -20,7 +21,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchApiKey = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/app/api-keys`, {
+      const res = await axios.get(`${APP_BASE_URL}/app/api-keys`, {
         withCredentials: true,
       });
       // Assuming backend returns latest active key { apiKey, keyId, createdAt }
@@ -33,7 +34,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/app/auth/me`, {
+      const res = await axios.get(`${APP_BASE_URL}/app/auth/me`, {
         withCredentials: true,
       });
       setUser(res.data.user);
@@ -55,7 +56,7 @@ export const AuthProvider = ({ children }) => {
   // ---- Auth Functions ----
   const signup = async (data) => {
     const res = await axios.post(
-      `${import.meta.env.VITE_API_URL}/app/auth/signup`,
+      `${APP_BASE_URL }/app/auth/signup`,
       data,
       { withCredentials: true }
     );
@@ -68,7 +69,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (data) => {
-    const res = await axios.post(`${import.meta.env.VITE_API_URL}/app/auth/login`, data, {
+    const res = await axios.post(`${APP_BASE_URL}/app/auth/login`, data, {
       withCredentials: true,
     });
     setUser(res.data.user);
@@ -82,7 +83,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     await axios.post(
-      `${import.meta.env.VITE_API_URL}/app/auth/logout`,
+      `${APP_BASE_URL}/app/auth/logout`,
       {},
       { withCredentials: true }
     );

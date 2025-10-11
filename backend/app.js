@@ -14,6 +14,7 @@ import apiKeysRouter from "./routes/app/apiKeys.js";
 import appRenders from "./routes/app/appRenders.js";
 import checkoutRouter from "./routes/app/checkout.js";
 import webhooksRouter from "./routes/app/webhook.js";
+import automationRoutes from "./routes/app/automation.js";
 
 dotenv.config();
 
@@ -70,6 +71,8 @@ app.use("/app/checkout", cors(corsOptions), authMiddleware, checkoutRouter);
 
 // Webhooks
 app.use("/app/webhooks", cors(corsOptions), webhooksRouter);
+
+app.use("/app/automation", cors(corsOptions), automationRoutes);
 
 // Public Render API - open CORS
 app.use(

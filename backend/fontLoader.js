@@ -12,7 +12,7 @@ const FONT_CACHE_DIR = path.join(__dirname, "fonts-cache");
 
 /**
  * Loads a font from Google Fonts (or local cache) and registers it with node-canvas.
- * Works with any Google Font automatically.
+ * Works with any Google Font automatically.  
  *
  * @param {string} family - Font family (e.g., "Roboto", "Source Code Pro").
  * @param {string} [weight="400"] - Font weight (e.g., "400", "700").

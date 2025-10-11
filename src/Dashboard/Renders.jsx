@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { useAlert } from "@/context/AlertContext";
+import { APP_BASE_URL } from "@/utils/env";
 
 export default function Renders() {
   const [renders, setRenders] = useState([]);
@@ -25,7 +26,7 @@ export default function Renders() {
 
   const fetchRenders = async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/app/renders`, {
+      const res = await axios.get(`${APP_BASE_URL}/app/renders`, {
         withCredentials: true,
       });
       setRenders(res.data);
@@ -82,7 +83,7 @@ function RenderCard({ render, fetchRenders }) {
 
   const handleDelete = async () => {
     try {
-      await axios.delete(`${import.meta.env.VITE_API_URL}/app/renders/${render._id}`, {
+      await axios.delete(`${APP_BASE_URL}/app/renders/${render._id}`, {
         withCredentials: true,
       });
       showAlert("Render deleted", { type: "success" });

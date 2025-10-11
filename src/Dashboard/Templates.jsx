@@ -5,6 +5,7 @@ import CreateTemplate from "@/Dashboard/sections/CreateTemplate";
 import CreatedTemplatesSection from "@/Dashboard/sections/CreatedTemplates";
 
 import { useAlert } from "@/context/AlertContext";
+import { APP_BASE_URL } from "@/utils/env";
 
 export default function Templates() {
   const [templates, setTemplates] = useState([]);
@@ -13,7 +14,7 @@ export default function Templates() {
   // fetch templates from API
   const fetchTemplates = useCallback(async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/app/templates`, {
+      const res = await axios.get(`${APP_BASE_URL}/app/templates`, {
         withCredentials: true,
       });
       setTemplates(res.data);
