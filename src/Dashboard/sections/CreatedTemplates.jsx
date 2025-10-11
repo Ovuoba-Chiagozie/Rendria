@@ -23,6 +23,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useAutomationModal } from "@/context/AutomationModalContext";
 import axios from "axios";
 import { APP_BASE_URL } from "@/utils/env";
 
@@ -56,6 +57,11 @@ export default function CreatedTemplatesSection({
 function TemplateCard({ template, fetchTemplates }) {
   const { showAlert } = useAlert();
   const navigate = useNavigate();
+  const { openModal } = useAutomationModal();
+
+  const handleAutomate = (templateId) => {
+    openModal(templateId);
+  };
 
   const handleOpen = () => {
     navigate(`/editor/${template._id}`);
@@ -95,10 +101,9 @@ function TemplateCard({ template, fetchTemplates }) {
         persist: true,
       });
 
-      await axios.delete(
-        `${APP_BASE_URL}/app/templates/${template._id}`,
-        { withCredentials: true }
-      );
+      await axios.delete(`${APP_BASE_URL}/app/templates/${template._id}`, {
+        withCredentials: true,
+      });
 
       showAlert("Template deleted successfully!", { type: "success" });
       fetchTemplates();
@@ -143,10 +148,29 @@ function TemplateCard({ template, fetchTemplates }) {
 
       {/* Footer: Actions */}
       <CardFooter
-        className="p-0 pt-2 flex justify-end"
+        className="p-0 pt-2 flex "
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-2">
+          {/* Automate Button */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 text-xs flex items-center gap-1 bg-black text-white"
+                  onClick={() => handleAutomate(template._id)}
+                >
+                  {/* <Zap className="w-4 h-4 text-blue-600" /> */}
+                  Automate
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Set up Google Sheets automation</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           {/* Copy ID */}
           <TooltipProvider>
             <Tooltip>
