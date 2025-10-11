@@ -5,6 +5,7 @@ import axios from "axios"; // ✅ use axios
 import { FaInstagram, FaYoutube, FaFacebook, FaXTwitter } from "react-icons/fa6";
 import { MdOutlineBusinessCenter, MdOutlineCampaign } from "react-icons/md";
 import { LuFileText, LuPrinter, LuRuler } from "react-icons/lu";
+import { APP_BASE_URL } from "@/utils/env";
 
 import CategoryModal from "@/Dashboard/components/CategoryModal";
 
@@ -94,7 +95,7 @@ export default function CreateTemplate() {
    const createTemplate = async (data) => {
     try {
       const res = await axios.post(
-        `${import.meta.env.VITE_API_URL}/app/templates`,
+        `${APP_BASE_URL}/app/templates`,
         data,
         {
           headers: { "Content-Type": "application/json" },

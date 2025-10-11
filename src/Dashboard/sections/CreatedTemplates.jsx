@@ -24,6 +24,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import axios from "axios";
+import { APP_BASE_URL } from "@/utils/env";
 
 export default function CreatedTemplatesSection({
   templates = [],
@@ -68,7 +69,7 @@ function TemplateCard({ template, fetchTemplates }) {
       });
 
       await axios.post(
-        `${import.meta.env.VITE_API_URL}/app/templates`,
+        `${APP_BASE_URL}/app/templates`,
         {
           name: `Copy of ${template.name}`,
           isPremade: template.isPremade,
@@ -95,7 +96,7 @@ function TemplateCard({ template, fetchTemplates }) {
       });
 
       await axios.delete(
-        `${import.meta.env.VITE_API_URL}/app/templates/${template._id}`,
+        `${APP_BASE_URL}/app/templates/${template._id}`,
         { withCredentials: true }
       );
 

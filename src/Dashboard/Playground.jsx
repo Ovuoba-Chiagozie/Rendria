@@ -10,6 +10,7 @@ import { lintGutter, linter } from "@codemirror/lint";
 import { LuLoaderCircle } from "react-icons/lu";
 import axios from "axios";
 import { useAuth } from "@/context/AuthContext";
+import { APP_BASE_URL } from "@/utils/env";
 
 export default function Playground() {
   const { apiKey } = useAuth();
@@ -56,7 +57,7 @@ export default function Playground() {
       setTemplatesLoading(true);
       setTemplatesError("");
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/app/templates`, {
+        const res = await axios.get(`${APP_BASE_URL}/app/templates`, {
           withCredentials: true, // send cookie token
         });
 
@@ -128,7 +129,7 @@ export default function Playground() {
     setLoading(true);
     setResponse(null);
     try {
-      const res = await axios.post(`${import.meta.env.VITE_API_URL}/v1/render`, body, {
+      const res = await axios.post(`${APP_BASE_URL}/v1/render`, body, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`, // 👈 auto-attach API key
@@ -152,7 +153,7 @@ export default function Playground() {
   const selectedLabel = selectedTemplate
     ? selectedTemplate.name
     : "Select Template";
-  const placeholderThumb = `${import.meta.env.VITE_API_URL}/assets/placeholder.svg`;
+  const placeholderThumb = `${APP_BASE_URL}/assets/placeholder.svg`;
 
   // Helpers
   const getElementKey = (el, index) =>

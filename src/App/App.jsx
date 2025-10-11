@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { v4 as uuid } from "uuid";
+import { APP_BASE_URL } from "@/utils/env";
 
 import EditorCanvas from "@/components/EditorCanvas";
 import PropertiesPanel from "@/components/panels/PropertiesPanel";
@@ -62,7 +62,7 @@ const App = () => {
 
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/app/templates/${id}`,
+          `${APP_BASE_URL }/app/templates/${id}`,
           { withCredentials: true }
         );
         const template = res.data;
@@ -134,7 +134,7 @@ const App = () => {
           counters,
         };
         const res = await axios.post(
-          `${import.meta.env.VITE_API_URL}/app/templates`,
+          `${APP_BASE_URL }/app/templates`,
           initPayload,
           {
             headers: { "Content-Type": "application/json" },
@@ -156,7 +156,7 @@ const App = () => {
   
         try {
           const uploadRes = await axios.post(
-            `${import.meta.env.VITE_API_URL}/app/templates/upload-thumbnail`,
+            `${APP_BASE_URL }/app/templates/upload-thumbnail`,
             thumbForm,
             {
               headers: { "Content-Type": "multipart/form-data" },
@@ -183,7 +183,7 @@ const App = () => {
         ...(thumbnailUrl && { thumbnailUrl, publicId: thumbnailPublicId }),
       };
   
-      await axios.put(`${import.meta.env.VITE_API_URL}/app/templates/${id}`, payload, {
+      await axios.put(`${APP_BASE_URL }/app/templates/${id}`, payload, {
         withCredentials: true,
       });
   
@@ -211,7 +211,7 @@ const App = () => {
   // Fetch templates from backend
   const fetchTemplates = useCallback(async () => {
     try {
-      const res = await axios.get(`${import.meta.env.VITE_API_URL}/app/templates`, {
+      const res = await axios.get(`${APP_BASE_URL }/app/templates`, {
         withCredentials: true, // 👈 ensures token cookie is sent
       });
       setTemplates(res.data);
