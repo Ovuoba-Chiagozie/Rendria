@@ -282,8 +282,8 @@ const AutomationModal = ({ templateId, onClose }) => {
                 <li>• Check the “status” column to see generation progress.</li>
                 <li>
                   • Questions? Email{" "}
-                  <a href="mailto:support@rendria.com" className="underline">
-                    support@rendria.com
+                  <a href="mailto:chiagozie@rendria.com" className="underline">
+                  chiagozie@rendria.com
                   </a>
                 </li>
               </ul>
