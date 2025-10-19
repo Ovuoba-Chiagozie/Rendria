@@ -44,10 +44,10 @@ export default function Pricing() {
           we're temporarily handling upgrades manually. To upgrade to Starter or Premium, 
           please send an email to{" "}
           <a 
-            href="mailto:ovuobachiagozie@gmail.com" 
+            href="mailto:chiagozie@rendria.com" 
             className="text-blue-600 hover:underline font-medium"
           >
-            ovuobachiagozie@gmail.com
+            chiagozie@rendria.com
           </a>{" "}
           with your preferred plan and we'll get you set up in less than 30 minutes.
         </AlertDescription>
