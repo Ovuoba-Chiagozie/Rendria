@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import App from "@/App/App";
 import DashboardLayout from "@/Dashboard/Dashboard";
@@ -13,15 +14,25 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { AlertProvider } from "@/context/AlertContext";
 import GlobalAlert from "@/context/GlobalAlert";
 import { AuthProvider } from "@/context/AuthContext";
-import { AutomationModalProvider } from "@/context/AutomationModalContext"; // NEW
+import { AutomationModalProvider } from "@/context/AutomationModalContext";
 
 function SaaS() {
+  // 👇 Inject Tawk.to script on mount
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.async = true;
+    script.src = "https://embed.tawk.to/690652a4f27fe5194da9efda/1j90b5kuj";
+    script.charset = "UTF-8";
+    script.setAttribute("crossorigin", "*");
+    document.body.appendChild(script);
+  }, []);
+
   return (
     <AlertProvider>
       <GlobalAlert />
       <Router>
         <AuthProvider>
-          <AutomationModalProvider> {/* NEW - Wrap everything */}
+          <AutomationModalProvider>
             <Routes>
               <Route
                 path="/editor/:id"
@@ -49,7 +60,7 @@ function SaaS() {
               <Route path="/signup" element={<SignupPage />} />
               <Route path="/login" element={<LoginPage />} />
             </Routes>
-          </AutomationModalProvider> {/* NEW */}
+          </AutomationModalProvider>
         </AuthProvider>
       </Router>
     </AlertProvider>
