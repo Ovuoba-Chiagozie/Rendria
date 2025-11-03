@@ -161,7 +161,7 @@ export const getTemplateById = async (req, res) => {
 
     const template = await Template.findOne({
       _id: id,
-      $or: [{ userId: req.userId }, { premade: true }],
+      userId: req.userId,
     });
 
     if (!template) {

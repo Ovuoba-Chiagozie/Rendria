@@ -9,7 +9,13 @@ export const getAutomationConfig = async (req, res) => {
     const { id } = req.params;
 
     // Find template - restrict by user
-    const template = await Template.findOne({ _id: id, userId: req.userId });
+    const template = await Template.findOne({
+      _id: id,
+      $or: [
+        { userId: req.userId },
+        { premade: true },
+      ],
+    });
 
     if (!template) {
       return res.status(404).json({

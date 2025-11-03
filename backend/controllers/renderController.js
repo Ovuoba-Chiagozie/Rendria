@@ -72,7 +72,10 @@ export const renderTemplate = async (req, res) => {
     // 🔒 Only fetch templates that belong to the current API key’s user
     const template = await Template.findOne({
       _id: templateId,
-      userId: req.userId, // <-- enforce ownership
+      $or: [
+        { userId: req.userId },
+        { premade: true }, // allow premade templates
+      ],
     });
 
     if (!template) {
