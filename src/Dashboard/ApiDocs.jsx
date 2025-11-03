@@ -105,7 +105,7 @@ export default function ApiDocs() {
   const examples = useMemo(() => {
     const bodyStr = JSON.stringify(exampleRequestJson, null, 2);
     return {
-      curl: `curl -X POST "https://api.yourdomain.com/v1/render" \\
+      curl: `curl -X POST "https://api.rendria.com/v1/render" \\
   -H "Authorization: Bearer ${apiKeyOrPlaceholder}" \\
   -H "Content-Type: application/json" \\
   -d '${bodyStr}'`,
@@ -114,7 +114,7 @@ const axios = require("axios");
 
 (async () => {
   const res = await axios.post(
-    "https://api.yourdomain.com/v1/render",
+    "https://api.rendria.com/v1/render",
     ${bodyStr},
     {
       headers: {
@@ -131,7 +131,7 @@ import requests
 body = ${bodyStr}
 
 res = requests.post(
-    "https://api.yourdomain.com/v1/render",
+    "https://api.rendria.com/v1/render",
     json=body,
     headers={
         "Authorization": "Bearer ${apiKeyOrPlaceholder}",
@@ -141,7 +141,7 @@ res = requests.post(
 print(res.json())`,
       php: `// PHP (curl)
 <?php
-$ch = curl_init("https://api.yourdomain.com/v1/render");
+$ch = curl_init("https://api.rendria.com/v1/render");
 $payload = json_encode(${bodyStr});
 
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
@@ -168,7 +168,7 @@ ${bodyStr}
 RequestBody body = RequestBody.create(json, JSON);
 
 Request request = new Request.Builder()
-  .url("https://api.yourdomain.com/v1/render")
+  .url("https://api.rendria.com/v1/render")
   .post(body)
   .addHeader("Authorization", "Bearer ${apiKeyOrPlaceholder}")
   .addHeader("Content-Type", "application/json")
@@ -297,7 +297,7 @@ try (Response response = client.newCall(request).execute()) {
           Render a template server-side with optional element modifications.
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <SmallBadge><strong>POST&nbsp;&nbsp;</strong> https://api.yourdomain.com/v1/render</SmallBadge>
+          <SmallBadge><strong>POST&nbsp;&nbsp;</strong> https://api.rendria.com/v1/render</SmallBadge>
           <SmallBadge> <strong>Auth:&nbsp;&nbsp;</strong>Bearer API key</SmallBadge>
           <SmallBadge> <strong>Response:&nbsp;&nbsp;</strong>JSON with image URL</SmallBadge>
         </div>
