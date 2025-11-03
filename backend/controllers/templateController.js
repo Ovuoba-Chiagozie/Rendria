@@ -5,6 +5,25 @@ import { templateSchema } from "../validators/templateValidator.js";
 import cloudinary from "../config/cloudinary.js";
 import { Readable } from "stream";
 
+/**
+ * Helpers
+ */
+const stripPremadeAndPublicIds = (body) => {
+  // Remove any premade flag client may try to send
+  if ("premade" in body) delete body.premade;
+  // Remove top-level publicId (don't let users claim ownership of someone else's assets)
+  if ("publicId" in body) delete body.publicId;
+  // Remove any element.publicId fields to avoid accidental cross-account deletes
+  if (Array.isArray(body.elements)) {
+    body.elements = body.elements.map((el) => {
+      const copy = { ...el };
+      if ("publicId" in copy) delete copy.publicId;
+      return copy;
+    });
+  }
+  return body;
+};
+
 export const createTemplate = async (req, res, next) => {
   try {
     const { error, value } = templateSchema.validate(req.body, {
@@ -17,9 +36,11 @@ export const createTemplate = async (req, res, next) => {
         details: error.details.map((err) => err.message),
       });
     }
-    console.log({ userid: req.userId });
-    // 👇 attach userId
-    const template = await Template.create({ ...value, userId: req.userId });
+
+    // Prevent creation of premade via API and strip premade/publicId
+    const safePayload = stripPremadeAndPublicIds(value);
+
+    const template = await Template.create({ ...safePayload, userId: req.userId });
 
     res.status(201).json(template);
   } catch (err) {
@@ -29,10 +50,10 @@ export const createTemplate = async (req, res, next) => {
 
 export const getAllTemplates = async (req, res) => {
   try {
-    // 👇 only this user's templates
-    const templates = await Template.find({ userId: req.userId }).sort({
-      createdAt: -1,
-    });
+    const templates = await Template.find({
+      $or: [{ userId: req.userId }, { premade: true }],
+    }).sort({ createdAt: -1 });
+
     res.json(templates);
   } catch (err) {
     console.error("⚠️ Error fetching templates:", err);
@@ -51,13 +72,10 @@ export const uploadThumbnail = async (req, res) => {
       return res.status(400).json({ error: "templateId is required" });
     }
 
-    // 👇 Verify ownership
-    const template = await Template.findOne({
-      _id: templateId,
-      userId: req.userId,
-    });
+    // Verify template belongs to user (can't upload thumbnail for premade or other user's template)
+    const template = await Template.findOne({ _id: templateId, userId: req.userId });
     if (!template) {
-      return res.status(404).json({ error: "Template not found" });
+      return res.status(404).json({ error: "Template not found or not owned by user" });
     }
 
     const bufferStream = new Readable();
@@ -71,6 +89,11 @@ export const uploadThumbnail = async (req, res) => {
       );
       bufferStream.pipe(stream);
     });
+
+    // Save thumbnail url / public id to template
+    template.thumbnailUrl = uploadResult.secure_url;
+    template.publicId = uploadResult.public_id;
+    await template.save();
 
     res.json({
       message: "Thumbnail uploaded successfully",
@@ -91,18 +114,13 @@ export const uploadImageElement = async (req, res) => {
 
     const { templateId, elementId } = req.body;
     if (!templateId || !elementId) {
-      return res
-        .status(400)
-        .json({ error: "templateId and elementId are required" });
+      return res.status(400).json({ error: "templateId and elementId are required" });
     }
 
-    // 👇 Verify ownership
-    const template = await Template.findOne({
-      _id: templateId,
-      userId: req.userId,
-    });
+    // Verify ownership (can't upload images into premade or someone else's template)
+    const template = await Template.findOne({ _id: templateId, userId: req.userId });
     if (!template) {
-      return res.status(404).json({ error: "Template not found" });
+      return res.status(404).json({ error: "Template not found or not owned by user" });
     }
 
     const bufferStream = new Readable();
@@ -121,6 +139,7 @@ export const uploadImageElement = async (req, res) => {
       bufferStream.pipe(stream);
     });
 
+    // Optionally attach to element in DB - up to you. Return url/public_id to client
     res.json({
       message: "Image uploaded successfully",
       url: uploadResult.secure_url,
@@ -140,8 +159,11 @@ export const getTemplateById = async (req, res) => {
       return res.status(404).json({ message: "Template not found" });
     }
 
-    // 👇 Restrict by user
-    const template = await Template.findOne({ _id: id, userId: req.userId });
+    const template = await Template.findOne({
+      _id: id,
+      $or: [{ userId: req.userId }, { premade: true }],
+    });
+
     if (!template) {
       return res.status(404).json({ error: "Template not found" });
     }
@@ -158,20 +180,19 @@ export const updateTemplateById = async (req, res) => {
     const { id } = req.params;
     const newElements = req.body.elements || [];
 
-    // 👇 Only update if belongs to user
+    // Fetch template owned by user only (users cannot edit premade templates)
     const oldTemplate = await Template.findOne({ _id: id, userId: req.userId });
     if (!oldTemplate) {
-      return res.status(404).json({ error: "Template not found" });
+      return res.status(404).json({ error: "Template not found or not editable" });
     }
 
-    const oldElements = oldTemplate.elements || [];
-    const oldPublicIds = oldElements
-      .filter((el) => el.type === "image" && el.publicId)
-      .map((el) => el.publicId);
-    const newPublicIds = newElements
-      .filter((el) => el.type === "image" && el.publicId)
-      .map((el) => el.publicId);
+    // Clean up any publicId fields from incoming body (safety)
+    const safeBody = stripPremadeAndPublicIds(req.body);
 
+    // Determine image publicIds to delete (only those that belong to this user's template)
+    const oldElements = oldTemplate.elements || [];
+    const oldPublicIds = oldElements.filter((el) => el.type === "image" && el.publicId).map((el) => el.publicId);
+    const newPublicIds = (safeBody.elements || []).filter((el) => el.type === "image" && el.publicId).map((el) => el.publicId);
     const deletedIds = oldPublicIds.filter((id) => !newPublicIds.includes(id));
 
     if (deletedIds.length > 0) {
@@ -185,7 +206,7 @@ export const updateTemplateById = async (req, res) => {
 
     const updatedTemplate = await Template.findOneAndUpdate(
       { _id: id, userId: req.userId },
-      req.body,
+      safeBody,
       { new: true }
     );
 
@@ -200,10 +221,15 @@ export const deleteTemplateById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // 👇 Only delete if belongs to user
+    // Find template (must belong to user). This prevents deleting premade templates (they have different userId or premade true)
     const template = await Template.findOne({ _id: id, userId: req.userId });
     if (!template) {
-      return res.status(404).json({ message: "Template not found" });
+      return res.status(404).json({ message: "Template not found or not deletable" });
+    }
+
+    // Extra safety: prevent deletion if somehow premade flagged
+    if (template.premade) {
+      return res.status(403).json({ message: "Premade templates cannot be deleted" });
     }
 
     const publicIdsToDelete = [];
@@ -234,8 +260,7 @@ export const deleteTemplateById = async (req, res) => {
     await Template.findOneAndDelete({ _id: id, userId: req.userId });
 
     res.json({
-      message:
-        "Template and related Cloudinary assets/folder deleted successfully",
+      message: "Template and related Cloudinary assets/folder deleted successfully",
       template,
     });
   } catch (err) {

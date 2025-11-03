@@ -9,35 +9,31 @@ const countersSchema = new mongoose.Schema(
     barcode: { type: Number, default: 0 },
     star: { type: Number, default: 0 },
   },
-  { _id: false } // no sub-id for this object
+  { _id: false }
 );
 
 const templateSchema = new mongoose.Schema({
   name: { type: String, required: true },
-
-  // The actual design data from your editor
   elements: { type: Array, default: [] },
-
-  // Thumbnail image stored on Cloudinary
   thumbnailUrl: { type: String, default: "" },
   publicId: { type: String, default: "" },
-
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
 
-  // Canvas size object
   canvasSize: {
     width: { type: Number, default: 800 },
     height: { type: Number, default: 600 },
   },
 
-  // Layer counters (to keep names consistent)
   counters: { type: countersSchema, default: () => ({}) },
+
+  // ✅ mark as premade (hidden from normal users)
+  premade: { type: Boolean, default: false },
 
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
 
-// Automatically update the updatedAt timestamp
+// Auto update
 templateSchema.pre("save", function (next) {
   this.updatedAt = Date.now();
   next();
