@@ -4,9 +4,29 @@ import User from "../models/User.js";
 import ApiKey from "../models/ApiKey.js";
 import { generateApiKey, encryptApiKey, hashApiKey, generateKeyId } from "../utils/apiKeyUtils.js";
 
-// Helper: generate token
+// Helper: generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
+};
+
+// Helper: cookie options for different environments
+const getCookieOptions = () => {
+  const isProd = process.env.NODE_ENV === "production";
+  const isVercel = !!process.env.VERCEL;
+
+  const options = {
+    httpOnly: true,
+    secure: isProd, // HTTPS only in prod
+    sameSite: isVercel ? "none" : "lax", // 'none' for Vercel cross-site
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  };
+
+  // Only set domain if using your custom domain (Render / production)
+  if (isProd && !isVercel) {
+    options.domain = ".rendria.com";
+  }
+
+  return options;
 };
 
 // POST /auth/signup
@@ -31,13 +51,7 @@ export const signup = async (req, res) => {
 
     // Generate JWT
     const token = generateToken(user._id);
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      domain: process.env.NODE_ENV === 'production' ? '.rendria.com' : undefined,
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
+    res.cookie("token", token, getCookieOptions());
 
     // ======= API KEY CREATION =======
     const apiKeyPlain = generateApiKey();       // plaintext key
@@ -69,7 +83,6 @@ export const signup = async (req, res) => {
   }
 };
 
-
 // POST /auth/login
 export const login = async (req, res) => {
   try {
@@ -90,23 +103,16 @@ export const login = async (req, res) => {
     }
 
     const token = generateToken(user._id);
-
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
-      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-      domain: process.env.NODE_ENV === 'production' ? '.rendria.com' : undefined,
-      maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-    });
+    res.cookie("token", token, getCookieOptions());
 
     res.json({
-        message: "Login successful",
-        user: {
-          _id: user._id,
-          email: user.email,
-          name: user.name,
-        },
-      });
+      message: "Login successful",
+      user: {
+        _id: user._id,
+        email: user.email,
+        name: user.name,
+      },
+    });
   } catch (err) {
     res.status(500).json({ message: "Server error", error: err.message });
   }
@@ -114,19 +120,14 @@ export const login = async (req, res) => {
 
 // GET /auth/me
 export const getMe = async (req, res) => {
-    res.json({
-        message: "Fetched user",
-        user: req.user,
-      });
+  res.json({
+    message: "Fetched user",
+    user: req.user,
+  });
 };
 
 // POST /auth/logout
 export const logout = async (req, res) => {
-  res.clearCookie("token", {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    domain: process.env.NODE_ENV === "production" ? ".rendria.com" : undefined,
-  });
+  res.clearCookie("token", getCookieOptions());
   res.json({ message: "Logged out successfully" });
 };
