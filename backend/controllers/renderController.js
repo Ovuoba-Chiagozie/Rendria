@@ -1,5 +1,4 @@
 // controllers/renderController.js
-import puppeteer from "puppeteer";
 import Template from "../models/Template.js";
 import Render from "../models/Render.js";
 import UsageLog from "../models/UsageLog.js";
