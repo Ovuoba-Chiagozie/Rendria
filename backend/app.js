@@ -127,4 +127,9 @@ const startServer = async () => {
   }
 };
 
-startServer();
+export default app;
+
+// Start server only if NOT running on Vercel
+if (!process.env.VERCEL) {
+  startServer();
+}
