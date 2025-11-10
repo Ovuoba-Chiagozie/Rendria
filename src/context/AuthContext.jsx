@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
   // ---- Auth Functions ----
   const signup = async (data) => {
     const res = await axios.post(
-      `${APP_BASE_URL }/app/auth/signup`,
+      `${APP_BASE_URL}/app/auth/signup`,
       data,
       { withCredentials: true }
     );
