@@ -3,7 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 
-import { normalizeRequest, formatResponse } from "./middlewares/casing.js";
+import { normalizeRequest } from "./middlewares/casing.js";
 import { authMiddleware } from "./middlewares/authMiddleware.js";
 import { apiKeyAuth } from "./middlewares/apiKeyAuth.js";
 import { checkCredits } from "./middlewares/checkCredits.js";
@@ -25,7 +25,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const isProduction = process.env.NODE_ENV === "production";
 
-// Middleware to ensure DB is connected (works for Vercel)
+// Ensure DB connection (important for Vercel’s cold starts)
 app.use(async (req, res, next) => {
   try {
     await connectDB();
@@ -36,7 +36,7 @@ app.use(async (req, res, next) => {
   }
 });
 
-// Middlewares
+// JSON middleware (except for Lemon webhooks)
 app.use((req, res, next) => {
   if (req.originalUrl.startsWith("/app/webhooks/lemon")) {
     next();
@@ -44,14 +44,13 @@ app.use((req, res, next) => {
     express.json()(req, res, next);
   }
 });
-app.use(cookieParser());
 
-// Serve assets
+app.use(cookieParser());
 app.use("/assets", express.static("assets"));
 
-// CORS configuration
+// ✅ CORS configuration
 const allowedOrigins = isProduction
-  ? [process.env.CORS_ORIGIN] // https://app.rendria.com
+  ? ["https://app.rendria.com", "https://rendria.com"] // both main & app subdomain
   : ["http://localhost:5173"];
 
 const corsOptions = {
@@ -60,10 +59,10 @@ const corsOptions = {
     if (allowedOrigins.includes(origin)) callback(null, true);
     else callback(new Error("Not allowed by CORS"));
   },
-  credentials: true,
+  credentials: true, // allow cookies
 };
 
-// Routes
+// Protected app routes
 app.use("/app/auth", cors(corsOptions), authRoutes);
 app.use("/app/api-keys", cors(corsOptions), authMiddleware, apiKeysRouter);
 app.use("/app/templates", cors(corsOptions), authMiddleware, templatesRouter);
@@ -72,43 +71,50 @@ app.use("/app/checkout", cors(corsOptions), authMiddleware, checkoutRouter);
 app.use("/app/webhooks", cors(corsOptions), webhooksRouter);
 app.use("/app/automation", cors(corsOptions), automationRoutes);
 
-// Public Render API - open CORS
-app.use("/v1/render", cors({ origin: "*" }), normalizeRequest, apiKeyAuth, checkCredits, renderRoutes);
+// Public render API (no credentials)
+app.use(
+  "/v1/render",
+  cors({ origin: "*" }),
+  normalizeRequest,
+  apiKeyAuth,
+  checkCredits,
+  renderRoutes
+);
 
 // Health check
 app.get("/health", (req, res) => {
-  res.json({ 
-    status: "ok", 
+  res.json({
+    status: "ok",
     environment: process.env.NODE_ENV || "development",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
 app.get("/", (req, res) => {
-  res.json({ 
+  res.json({
     message: "Rendria API is running",
     version: "1.0.0",
-    environment: process.env.NODE_ENV || "development"
+    environment: process.env.NODE_ENV || "development",
   });
 });
 
-// Error handling
+// Error handler
 app.use((err, req, res, next) => {
   console.error("Error:", err.message);
   res.status(err.status || 500).json({
     error: isProduction ? "Internal server error" : err.message,
-    ...(isProduction ? {} : { stack: err.stack })
+    ...(isProduction ? {} : { stack: err.stack }),
   });
 });
 
-// Export app for Vercel
+// ✅ Export for Vercel
 export default app;
 
-// Only start server for local/Render
-if (!process.env.VERCEL) {
+// ✅ Start server only when running locally
+if (process.env.NODE_ENV !== "production") {
   app.listen(PORT, () => {
     console.log(`🚀 Backend running on port ${PORT}`);
-    console.log(`📍 Environment: ${process.env.NODE_ENV || "development"}`);
-    console.log(`🌐 CORS allowed origins: ${allowedOrigins.join(", ")}`);
+    console.log(`📍 Environment: ${process.env.NODE_ENV}`);
+    console.log(`🌐 Allowed origins: ${allowedOrigins.join(", ")}`);
   });
 }

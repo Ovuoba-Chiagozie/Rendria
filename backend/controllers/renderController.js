@@ -12,9 +12,8 @@ import { customAlphabet } from "nanoid";
 import { deductCredits } from "../utils/credits.js";
 import { invokeLambda } from "../config/lamdaClient.js";
 
-const placeholder = process.env.VERCEL
-  ? "https://template-saas-bu2m.vercel.app/assets/placeholder.svg"
-  : process.env.NODE_ENV === "production"
+const placeholder =
+  process.env.NODE_ENV === "production"
     ? "https://api.rendria.com/assets/placeholder.svg"
     : "http://localhost:5000/assets/placeholder.svg";
     

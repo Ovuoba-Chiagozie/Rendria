@@ -2,31 +2,29 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import ApiKey from "../models/ApiKey.js";
-import { generateApiKey, encryptApiKey, hashApiKey, generateKeyId } from "../utils/apiKeyUtils.js";
+import {
+  generateApiKey,
+  encryptApiKey,
+  hashApiKey,
+  generateKeyId,
+} from "../utils/apiKeyUtils.js";
 
 // Helper: generate JWT token
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
 
-// Helper: cookie options for different environments
+// ✅ Unified cookie options for Rendria (production + local)
 const getCookieOptions = () => {
   const isProd = process.env.NODE_ENV === "production";
-  const isVercel = !!process.env.VERCEL;
 
-  const options = {
+  return {
     httpOnly: true,
-    secure: isProd, // HTTPS only in prod
-    sameSite: isVercel ? "none" : "lax", // 'none' for Vercel cross-site
+    secure: isProd, // only use HTTPS cookies in production
+    sameSite: isProd ? "none" : "lax", // "none" allows cross-site cookies (api.rendria.com ↔ rendria.com)
+    domain: isProd ? ".rendria.com" : undefined, // share cookies across subdomains
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   };
-
-  // Only set domain if using your custom domain (Render / production)
-  if (isProd && !isVercel) {
-    options.domain = ".rendria.com";
-  }
-
-  return options;
 };
 
 // POST /auth/signup
@@ -44,19 +42,16 @@ export const signup = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 12);
 
     // Create user
-    const user = await User.create({
-      email,
-      passwordHash,
-    });
+    const user = await User.create({ email, passwordHash });
 
     // Generate JWT
     const token = generateToken(user._id);
     res.cookie("token", token, getCookieOptions());
 
     // ======= API KEY CREATION =======
-    const apiKeyPlain = generateApiKey();       // plaintext key
-    const keyId = generateKeyId();              // short public keyId
-    const encryptedKey = encryptApiKey(apiKeyPlain); // encrypt key
+    const apiKeyPlain = generateApiKey(); // plaintext key
+    const keyId = generateKeyId(); // short public keyId
+    const encryptedKey = encryptApiKey(apiKeyPlain);
     const hashedKey = hashApiKey(apiKeyPlain);
 
     // Store in DB
@@ -67,7 +62,7 @@ export const signup = async (req, res) => {
       hashedKey,
     });
 
-    // Respond with user info AND the plaintext API key
+    // Respond with user info AND plaintext API key
     res.status(201).json({
       message: "Signup successful",
       user: {
@@ -75,7 +70,7 @@ export const signup = async (req, res) => {
         email: user.email,
         name: user.name,
       },
-      apiKey: apiKeyPlain, // user sees it immediately
+      apiKey: apiKeyPlain,
     });
   } catch (err) {
     console.error("Signup error:", err);
@@ -114,6 +109,7 @@ export const login = async (req, res) => {
       },
     });
   } catch (err) {
+    console.error("Login error:", err);
     res.status(500).json({ message: "Server error", error: err.message });
   }
 };
