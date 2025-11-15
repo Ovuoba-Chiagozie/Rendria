@@ -282,7 +282,6 @@ try (Response response = client.newCall(request).execute()) {
     format: "png",
     width: 1200,
     height: 630,
-    apiKeyId: "APIKEY_OBJECT_ID",
     created_at: "2025-09-16T14:52:05.437Z"
   };
 
