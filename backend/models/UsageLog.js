@@ -10,7 +10,7 @@ const usageLogSchema = new mongoose.Schema(
     action: {
       type: String,
       required: true,
-      enum: ["render", "export", "api_call"], // extend as needed
+      enum: ["render", "export", "api_call","batch_render"], // extend as needed
     },
     creditsUsed: {
       type: Number,

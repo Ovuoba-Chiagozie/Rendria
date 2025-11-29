@@ -75,11 +75,11 @@ app.use("/app/automation", cors(corsOptions), automationRoutes);
 app.use(
   "/v1/render",
   cors({ origin: "*" }),
-  normalizeRequest,
   apiKeyAuth,
   checkCredits,
   renderRoutes
 );
+
 
 // Health check
 app.get("/health", (req, res) => {

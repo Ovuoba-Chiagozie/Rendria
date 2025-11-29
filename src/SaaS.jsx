@@ -7,6 +7,8 @@ import Playground from "@/Dashboard/Playground";
 import Renders from "./Dashboard/Renders";
 import ApiDocs from "./Dashboard/ApiDocs";
 import Pricing from "./Dashboard/Pricing";
+import CsvBatch from "./Dashboard/CsvBatch";
+import MyBatches from "./Dashboard/MyBatches";
 import NotFound from "@/NotFound";
 import SignupPage from "@/registration/SignupPage";
 import LoginPage from "@/registration/LoginPage";
@@ -54,6 +56,8 @@ function SaaS() {
                 <Route path="playground" element={<Playground />} />
                 <Route path="renders" element={<Renders />} />
                 <Route path="api" element={<ApiDocs />} />
+                <Route path="bulk-generation" element={<CsvBatch />} />
+                <Route path="batches" element={<MyBatches />} />
                 <Route path="pricing" element={<Pricing />} />
               </Route>
               <Route path="/notfound" element={<NotFound />} />
