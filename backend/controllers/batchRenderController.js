@@ -343,8 +343,8 @@ export const batchRender = async (req, res) => {
             // Invoke Lambda
             const lambdaResult = await invokeLambda({
               html,
-              width: template.canvasSize.width,
-              height: template.canvasSize.height,
+              width: Math.round(template.canvasSize.width), // ✅ Ensure integer
+              height: Math.round(template.canvasSize.height), // ✅ Ensure integer
               format: format || "png",
               templateId: template._id,
             });
@@ -367,8 +367,8 @@ export const batchRender = async (req, res) => {
               template_name: template.name,
               url,
               format: format || "png",
-              width: template.canvasSize.width,
-              height: template.canvasSize.height,
+              width: Math.round(template.canvasSize.width), // ✅ Ensure integer
+              height: Math.round(template.canvasSize.height), // ✅ Ensure integer
               userId: req.userId,
               apiKeyId: req.apiKeyId,
               isBatch: false, // ✅ Mark as individual render, not batch
