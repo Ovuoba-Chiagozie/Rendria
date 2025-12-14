@@ -233,28 +233,36 @@ export const renderTemplate = async (req, res) => {
             .join("&")}&display=swap" rel="stylesheet">`
         : "";
 
-    const html = `
-      <html>
-        <head>
-          <meta charset="UTF-8" />
-          ${fontsUrl}
-          <style>
-            body {
-              margin:0;
-              padding:0;
-              width:${canvasSize.width}px;
-              height:${canvasSize.height}px;
-              background:white;
-              position:relative;
-              overflow:hidden;
-            }
-          </style>
-        </head>
-        <body>
-          ${elementHTML}
-        </body>
-      </html>
-    `;
+        const html = `
+        <html>
+          <head>
+            <meta charset="UTF-8" />
+            ${fontsUrl}
+            <style>
+              html, body {
+                margin: 0;
+                padding: 0;
+                background: white;
+              }
+      
+              #canvas {
+                position: relative;
+                width: ${canvasSize.width}px;
+                height: ${canvasSize.height}px;
+                overflow: hidden; /* 👈 HARD CLIP */
+                background: white;
+                contain: layout paint size; /* 👈 prevents layout expansion */
+              }
+            </style>
+          </head>
+          <body>
+            <div id="canvas">
+              ${elementHTML}
+            </div>
+          </body>
+        </html>
+      `;
+      
 
     const outputWidth = width || canvasSize.width;
     const outputHeight = height || canvasSize.height;
