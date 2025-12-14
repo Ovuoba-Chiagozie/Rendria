@@ -3,8 +3,6 @@ import mongoose from "mongoose";
 import Template from "../models/Template.js";
 import { templateSchema } from "../validators/templateValidator.js";
 import cloudinary from "../config/cloudinary.js";
-import { Readable } from "stream";
-import streamifier from "streamifier";
 
 /**
  * Helpers
