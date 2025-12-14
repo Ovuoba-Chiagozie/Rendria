@@ -4,6 +4,7 @@ import Template from "../models/Template.js";
 import { templateSchema } from "../validators/templateValidator.js";
 import cloudinary from "../config/cloudinary.js";
 import { Readable } from "stream";
+import streamifier from "streamifier";
 
 /**
  * Helpers
@@ -78,17 +79,15 @@ export const uploadThumbnail = async (req, res) => {
       return res.status(404).json({ error: "Template not found or not owned by user" });
     }
 
-    const bufferStream = new Readable();
-    bufferStream.push(req.file.buffer);
-    bufferStream.push(null);
-
-    const uploadResult = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        { folder: "thumbnails", public_id: templateId, overwrite: true },
-        (error, result) => (error ? reject(error) : resolve(result))
-      );
-      bufferStream.pipe(stream);
-    });
+    // Direct upload using base64
+    const uploadResult = await cloudinary.uploader.upload(
+      `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+      {
+        folder: "thumbnails",
+        public_id: templateId,
+        overwrite: true,
+      }
+    );
 
     // Save thumbnail url / public id to template
     template.thumbnailUrl = uploadResult.secure_url;
@@ -111,35 +110,30 @@ export const uploadImageElement = async (req, res) => {
     if (!req.file) {
       return res.status(400).json({ error: "No file provided" });
     }
-
     const { templateId, elementId } = req.body;
     if (!templateId || !elementId) {
       return res.status(400).json({ error: "templateId and elementId are required" });
     }
 
-    // Verify ownership (can't upload images into premade or someone else's template)
     const template = await Template.findOne({ _id: templateId, userId: req.userId });
     if (!template) {
       return res.status(404).json({ error: "Template not found or not owned by user" });
     }
 
-    const bufferStream = new Readable();
-    bufferStream.push(req.file.buffer);
-    bufferStream.push(null);
+    console.log('🔵 Starting direct upload');
+    
+    // Direct upload using base64
+    const uploadResult = await cloudinary.uploader.upload(
+      `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`,
+      {
+        folder: `templates/${templateId}/images`,
+        public_id: elementId,
+        overwrite: true,
+      }
+    );
 
-    const uploadResult = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream(
-        {
-          folder: `templates/${templateId}/images`,
-          public_id: elementId,
-          overwrite: true,
-        },
-        (error, result) => (error ? reject(error) : resolve(result))
-      );
-      bufferStream.pipe(stream);
-    });
+    console.log('✅ Upload completed');
 
-    // Optionally attach to element in DB - up to you. Return url/public_id to client
     res.json({
       message: "Image uploaded successfully",
       url: uploadResult.secure_url,
