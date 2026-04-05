@@ -12,6 +12,7 @@ import { renderStarRating } from "./renderHelpers/renderStarRating.js";
 import cloudinary from "../config/cloudinary.js";
 import archiver from "archiver";
 import { Readable } from "stream";
+import { normalizeCanvasSize } from "../utils/normalizeDimensions.js";
 
 const nanoid = customAlphabet("0123456789ABCDEFGHJKLMNPQRSTUVWXYZ", 20);
 
@@ -63,8 +64,9 @@ const allowedFields = {
 const CHUNK_SIZE = 10; // Process 10 renders at a time
 
 // Helper: Build HTML for a single render
-const buildHTML = (template, modifications) => {
-  const { canvasSize, elements } = template;
+const buildHTML = (template, modifications, canvasSizeOverride) => {
+  const { elements } = template;
+  const canvasSize = canvasSizeOverride || normalizeCanvasSize(template.canvasSize);
 
   // Apply modifications
   const modifiedElements = elements.map((el) => {
@@ -275,6 +277,8 @@ export const batchRender = async (req, res) => {
   
       console.log(`✅ Template found: ${template.name}`);
   
+      const normalizedCanvasSize = normalizeCanvasSize(template.canvasSize);
+
       // Check user credits
       const userCredits = await getCredits(req.userId);
       const affordableCount = Math.min(requests.length, userCredits);
@@ -296,8 +300,8 @@ export const batchRender = async (req, res) => {
         template_name: template.name,
         url: "pending",
         format: format || "png",
-        width: template.canvasSize.width,
-        height: template.canvasSize.height,
+        width: normalizedCanvasSize.width,
+        height: normalizedCanvasSize.height,
         isBatch: true,
         batchId,
         batchStatus: "processing",
@@ -345,13 +349,13 @@ export const batchRender = async (req, res) => {
             }
   
             // Build HTML
-            const html = buildHTML(template, parsedMods);
+            const html = buildHTML(template, parsedMods, normalizedCanvasSize);
   
             // Invoke Lambda
             const lambdaResult = await invokeLambda({
               html,
-              width: Math.round(template.canvasSize.width), // ✅ Ensure integer
-              height: Math.round(template.canvasSize.height), // ✅ Ensure integer
+              width: normalizedCanvasSize.width,
+              height: normalizedCanvasSize.height,
               format: format || "png",
               templateId: template._id,
             });
@@ -374,8 +378,8 @@ export const batchRender = async (req, res) => {
               template_name: template.name,
               url,
               format: format || "png",
-              width: Math.round(template.canvasSize.width), // ✅ Ensure integer
-              height: Math.round(template.canvasSize.height), // ✅ Ensure integer
+              width: normalizedCanvasSize.width,
+              height: normalizedCanvasSize.height,
               userId: req.userId,
               apiKeyId: req.apiKeyId,
               isBatch: false, // ✅ Mark as individual render, not batch
