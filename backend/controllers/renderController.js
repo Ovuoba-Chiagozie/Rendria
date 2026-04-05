@@ -11,6 +11,7 @@ import cloudinary from "../config/cloudinary.js";
 import { customAlphabet } from "nanoid";
 import { deductCredits } from "../utils/credits.js";
 import { invokeLambda } from "../config/lamdaClient.js";
+import { normalizeCanvasSize, normalizeDimension } from "../utils/normalizeDimensions.js";
 
 const placeholder =
   process.env.NODE_ENV === "production"
@@ -83,7 +84,8 @@ export const renderTemplate = async (req, res) => {
     }
 
     const { canvasSize, name: templateName } = template;
-    console.log({ canvasSize });
+    const normalizedCanvasSize = normalizeCanvasSize(canvasSize);
+    console.log({ canvasSize: normalizedCanvasSize });
 
     // Collect all element names in template for quick lookup
     const elementMap = Object.fromEntries(
@@ -247,8 +249,8 @@ export const renderTemplate = async (req, res) => {
       
               #canvas {
                 position: relative;
-                width: ${canvasSize.width}px;
-                height: ${canvasSize.height}px;
+                width: ${normalizedCanvasSize.width}px;
+                height: ${normalizedCanvasSize.height}px;
                 overflow: hidden; /* 👈 HARD CLIP */
                 background: white;
                 contain: layout paint size; /* 👈 prevents layout expansion */
@@ -264,8 +266,8 @@ export const renderTemplate = async (req, res) => {
       `;
       
 
-    const outputWidth = width || canvasSize.width;
-    const outputHeight = height || canvasSize.height;
+    const outputWidth = normalizeDimension(width, normalizedCanvasSize.width);
+    const outputHeight = normalizeDimension(height, normalizedCanvasSize.height);
     // 3. Call Lambda
     console.log({
       width: outputWidth,
