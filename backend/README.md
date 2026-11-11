@@ -14,7 +14,7 @@ Run `npm.cmd run db:migrate` against the target PostgreSQL database before deplo
 
 ## Vercel deployment
 
-The Vite frontend and API are separate Vercel projects. Set the API project's Root Directory to `backend` (relative to this Git repository's root) and connect it to the intended Git branch. [vercel.json](vercel.json) selects the NestJS framework and sets a 60-second function duration. `src/main.ts` is the Nest CLI entry point; `src/server.ts` also supports Vercel's Node server entry-point detection.
+The Vite frontend and API are separate Vercel projects. Set the API project's Root Directory to `backend` (relative to this Git repository's root) and connect it to the intended Git branch. [vercel.json](vercel.json) selects the NestJS framework, and `src/server.ts` is the single application entry point for both Nest CLI and Vercel. Configure the Function Max Duration in the API project's Vercel settings if needed for rendering; the `functions` field in `vercel.json` is not used for this NestJS entry point.
 
 Current hosted URLs are `https://app-rendria.vercel.app` and `https://rendria-backend.vercel.app`. The frontend routes browser API calls through `/api/*` to the backend Vercel project, allowing host-only session cookies. When using custom domains, attach `app.rendria.com` to the frontend project and `api.rendria.com` to the API project.
 
@@ -35,4 +35,4 @@ npm.cmd run test -- --runInBand
 npm.cmd run test:e2e -- --runInBand
 ```
 
-Before releasing, smoke-test signup, login, templates, `/v1/render`, batch ZIP output, and a signed Lemon webhook in staging. The API uses a small serverless-safe PostgreSQL pool; use your provider's pooled connection string where available. The local tests do not substitute for a staging test with PostgreSQL, AWS, Cloudinary, and the deployed Vercel environment. Batch rendering remains synchronous within the 60-second function duration; large batches may time out and need a background job for reliable processing.
+Before releasing, smoke-test signup, login, templates, `/v1/render`, batch ZIP output, and a signed Lemon webhook in staging. The API uses a small serverless-safe PostgreSQL pool; use your provider's pooled connection string where available. The local tests do not substitute for a staging test with PostgreSQL, AWS, Cloudinary, and the deployed Vercel environment. Batch rendering remains synchronous; large batches may exceed the configured Vercel function duration and need a background job for reliable processing.
