@@ -17,6 +17,7 @@ import { SiJavascript, SiPython, SiPhp } from "react-icons/si";
 import { FaTerminal, FaJava } from "react-icons/fa";
 import { useAuth } from "@/context/AuthContext";
 import { useAlert } from "@/context/AlertContext";
+import { PUBLIC_API_BASE_URL } from "@/utils/env";
 
 function SectionCard({ title, children }) {
   return (
@@ -71,7 +72,7 @@ export default function ApiDocs() {
   };
 
   // Example request body (snake_case) — this mirrors your renderValidator
-  const exampleRequestJson = {
+  const exampleRequestJson = useMemo(() => ({
     template_id: "TEMPLATE_ID_HERE",
     format: "png",
     width: 1200,
@@ -97,15 +98,16 @@ export default function ApiDocs() {
         objectFit: "cover",
       },
     },
-  };
+  }), []);
 
   // Helper to build code snippets with the current apiKey inserted
   const apiKeyOrPlaceholder = apiKey || "YOUR_API_KEY_HERE";
 
+  const renderUrl = `${PUBLIC_API_BASE_URL}/v1/render`;
   const examples = useMemo(() => {
     const bodyStr = JSON.stringify(exampleRequestJson, null, 2);
     return {
-      curl: `curl -X POST "https://api.rendria.com/v1/render" \\
+      curl: `curl -X POST "${renderUrl}" \\
   -H "Authorization: Bearer ${apiKeyOrPlaceholder}" \\
   -H "Content-Type: application/json" \\
   -d '${bodyStr}'`,
@@ -114,7 +116,7 @@ const axios = require("axios");
 
 (async () => {
   const res = await axios.post(
-    "https://api.rendria.com/v1/render",
+    "${renderUrl}",
     ${bodyStr},
     {
       headers: {
@@ -131,7 +133,7 @@ import requests
 body = ${bodyStr}
 
 res = requests.post(
-    "https://api.rendria.com/v1/render",
+    "${renderUrl}",
     json=body,
     headers={
         "Authorization": "Bearer ${apiKeyOrPlaceholder}",
@@ -141,7 +143,7 @@ res = requests.post(
 print(res.json())`,
       php: `// PHP (curl)
 <?php
-$ch = curl_init("https://api.rendria.com/v1/render");
+$ch = curl_init("${renderUrl}");
 $payload = json_encode(${bodyStr});
 
 curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
@@ -168,7 +170,7 @@ ${bodyStr}
 RequestBody body = RequestBody.create(json, JSON);
 
 Request request = new Request.Builder()
-  .url("https://api.rendria.com/v1/render")
+  .url("${renderUrl}")
   .post(body)
   .addHeader("Authorization", "Bearer ${apiKeyOrPlaceholder}")
   .addHeader("Content-Type", "application/json")
@@ -178,14 +180,14 @@ try (Response response = client.newCall(request).execute()) {
   System.out.println(response.body().string());
 }`,
     };
-  }, [apiKeyOrPlaceholder]);
+  }, [apiKeyOrPlaceholder, renderUrl, exampleRequestJson]);
 
   const copyToClipboard = async (text) => {
     try {
       await navigator.clipboard.writeText(text);
       // minimal feedback — replace with your AlertContext if you want
       showAlert("Copied to clipboard", { type: "success" });
-    } catch (err) {
+    } catch {
       showAlert("Failed to copy", { type: "error" });
     }
   };
@@ -296,7 +298,7 @@ try (Response response = client.newCall(request).execute()) {
           Render a template server-side with optional element modifications.
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          <SmallBadge><strong>POST&nbsp;&nbsp;</strong> https://api.rendria.com/v1/render</SmallBadge>
+          <SmallBadge><strong>POST&nbsp;&nbsp;</strong> {renderUrl}</SmallBadge>
           <SmallBadge> <strong>Auth:&nbsp;&nbsp;</strong>Bearer API key</SmallBadge>
           <SmallBadge> <strong>Response:&nbsp;&nbsp;</strong>JSON with image URL</SmallBadge>
         </div>

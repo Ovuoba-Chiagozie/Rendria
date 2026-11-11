@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const ENC_KEY_BASE64 = process.env.API_KEY_ENC_KEY;
+console.log("ENC_KEY_BASE64", ENC_KEY_BASE64);
 if (!ENC_KEY_BASE64) {
   throw new Error("Missing API_KEY_ENC_KEY env variable (base64 32 bytes)");
 }
