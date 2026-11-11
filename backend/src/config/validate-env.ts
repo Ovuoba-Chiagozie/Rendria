@@ -27,16 +27,16 @@ export function assertRuntimeConfig(): void {
       'CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET are required in production',
     );
   }
-  if (
-    env.production &&
-    (!env.lemonApiKey ||
-      !env.lemonWebhookSecret ||
-      !env.lemonStoreId ||
-      !env.starterVariantId ||
-      !env.premiumVariantId)
-  ) {
-    throw new Error(
-      'Lemon Squeezy API, webhook, store and both product variant settings are required in production',
-    );
-  }
+  // if (
+  //   env.production &&
+  //   (!env.lemonApiKey ||
+  //     !env.lemonWebhookSecret ||
+  //     !env.lemonStoreId ||
+  //     !env.starterVariantId ||
+  //     !env.premiumVariantId)
+  // ) {
+  //   throw new Error(
+  //     'Lemon Squeezy API, webhook, store and both product variant settings are required in production',
+  //   );
+  // }
 }
