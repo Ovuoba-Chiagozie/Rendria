@@ -14,7 +14,7 @@ Run `npm.cmd run db:migrate` against the target PostgreSQL database before deplo
 
 ## Vercel deployment
 
-The Vite frontend and API are separate Vercel projects. Set the API project's Root Directory to `backend` (relative to this Git repository's root) and connect it to the intended Git branch. Vercel detects `src/main.ts` as the NestJS entry point; [vercel.json](vercel.json) sets a 60-second function duration.
+The Vite frontend and API are separate Vercel projects. Set the API project's Root Directory to `backend` (relative to this Git repository's root) and connect it to the intended Git branch. [vercel.json](vercel.json) selects the NestJS framework and sets a 60-second function duration. `src/main.ts` is the Nest CLI entry point; `src/server.ts` also supports Vercel's Node server entry-point detection.
 
 Current hosted URLs are `https://app-rendria.vercel.app` and `https://rendria-backend.vercel.app`. The frontend routes browser API calls through `/api/*` to the backend Vercel project, allowing host-only session cookies. When using custom domains, attach `app.rendria.com` to the frontend project and `api.rendria.com` to the API project.
 

@@ -1,7 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nestjs",
   "functions": {
     "src/main.ts": {
+      "maxDuration": 60
+    },
+    "src/server.ts": {
       "maxDuration": 60
     }
   }
